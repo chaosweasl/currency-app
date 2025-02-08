@@ -1,0 +1,22 @@
+.bg-dark-blue {
+  background-color: #010723;
+}
+
+.bg-custom-blue-gradient {
+  background: linear-gradient(to right, #0a146e, #040f43);
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  height: 100vh;
+}
+
+.text-custom-grey {
+  color: #d1d7e2;
+  font-size: 1.5rem;
+}
+
+.text-custom-title {
+  font-size: 3rem;
+}

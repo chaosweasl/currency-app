@@ -13,15 +13,32 @@ function App() {
 
   return (
     <>
-      <div className="d-flex justify-content-center align-items-center my-4">
-        <div
-          className="bg-primary rounded-circle"
-          style={{ width: "2000px", height: "1500px" }}
-        ></div>
-      </div>
-
-      <div id="title" className="text-center m-4">
-        <h1>Currency Exchange</h1>
+      <div
+        id="title"
+        className="text-center m-4 text-white d-flex 
+        justify-content-center align-items-center"
+        style={{
+          height: "20vh",
+          transform: "translateY(50%)",
+          flexDirection: "column",
+        }}
+      >
+        <h1 className="text-custom-title">
+          Currency Exchange Application with APIs
+        </h1>
+        <p className="text-custom-grey">
+          An application made in{" "}
+          <img
+            src="src/assets/react.svg"
+            style={{ width: "25px", height: "25px" }}
+          ></img>
+          <code style={{ color: "#75aaff" }}>React</code> using{" "}
+          <img
+            src="src/assets/bootstrap.svg"
+            style={{ width: "30px", height: "25px" }}
+          ></img>
+          <code>Bootstrap</code> by yours truly :)
+        </p>
       </div>
 
       {/* <div className="input-group mb-3">
