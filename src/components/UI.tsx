@@ -1,56 +1,53 @@
 import Background from "./Background";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 function UI() {
-  const [currentCurrency, setCurrentCurrency] = useState("USD");
-  const currencies = ["USD", "EUR", "JPY", "RON", "RUB"];
-  const currencySymbols = {
-    USD: "$",
-    EUR: "€",
-    JPY: "¥",
-    RON: "lei ",
-    RUB: "₽",
-  };
+  const [amount, setAmount] = useState("");
+  const [fromCurrency, setFromCurrency] = useState("USD");
+  const [toCurrency, setToCurrency] = useState("EUR");
+  const [convertedAmount, setConvertedAmount] = useState(null);
+  const [exchangeRates, setExchangeRates] = useState({});
+
+  const API_KEY = "fab5466580eea5d483944dca";
+  const API_URL = `https://v6.exchangerate-api.com/v6/${API_KEY}/latest/USD`;
 
   return (
     <Background>
-      {/* <div className="input-group mb-3">
-        <span className="input-group-text">
-          {currencySymbols[currentCurrency]}
-        </span>
-        <input type="text" className="form-control" placeholder="Username" />
-      </div>
-
-      <div className="container d-flex flex-column justify-content-center mt-4 w-50">
-        <div className="input-group mb-2">
-          <button
-            className="btn btn-outline-secondary dropdown-toggle"
-            type="button"
-            data-bs-toggle="dropdown"
-          >
-            {currentCurrency}
-          </button>
-          <ul className="dropdown-menu overflow-auto">
-            {currencies.map((currency) => (
-              <li key={currency}>
-                <a
-                  className="dropdown-item"
-                  href="#"
-                  onClick={() => setCurrentCurrency(currency)}
-                >
-                  {currency}
-                </a>
-              </li>
-            ))}
-          </ul>
-          <input
-            type="number"
-            className="form-control"
-            placeholder="Enter the amount here..."
-          />
+      <div
+        id="currency-input"
+        className="d-flex justify-content-between align-items-center gap-3"
+        style={{ flexWrap: "wrap" }}
+      >
+        <div
+          className="input-group align-items-start"
+          style={{ flex: "1 1 30%" }}
+        >
+          <span className="input-group-text">
+            {currencySymbols[currentCurrency]}
+          </span>
+          <input type="text" className="form-control" placeholder="Amount" />
         </div>
-      </div> */}
+
+        <div
+          id="currency-change"
+          className="d-flex align-items-center"
+          style={{ flex: "1 1 60%" }}
+        >
+          <div className="input-group">
+            <input type="text" className="form-control" placeholder="From" />
+          </div>
+
+          <button type="button" className="btn btn-outline-primary">
+            <i className="bi bi-arrow-left-right" />
+          </button>
+
+          <div className="input-group align-items-start">
+            <input type="text" className="form-control" placeholder="To" />
+          </div>
+        </div>
+      </div>
     </Background>
   );
 }
