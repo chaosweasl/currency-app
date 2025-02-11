@@ -66,8 +66,7 @@ function Background({ children }: { children: React.ReactNode }) {
 
       <div
         id="convertor-container"
-        className="position-absolute bg-white text-white d-flex
-      justify-content-center align-items-center"
+        className="position-absolute bg-white text-white"
         style={{
           height: "33vh",
           width: "62vw",
@@ -76,6 +75,10 @@ function Background({ children }: { children: React.ReactNode }) {
           left: "50%",
           transform: "translate(-50%, -50%)",
           boxShadow: "0 4px 16px rgba(0, 0, 0, 0.2)",
+          display: "flex", // Add this line to enable Flexbox
+          flexDirection: "column", // Stack items vertically
+          justifyContent: "center", // Center vertically
+          alignItems: "center", // Center horizontally
         }}
       >
         {children}

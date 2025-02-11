@@ -1,50 +1,121 @@
 import Background from "./Background";
-
-import { useState, useEffect } from "react";
 import axios from "axios";
+import { useState, useEffect, useRef } from "react";
+
+//I never finished this because the CSS I made was too messy, pure spaghetti code
 
 function UI() {
-  const [amount, setAmount] = useState("");
-  const [fromCurrency, setFromCurrency] = useState("USD");
-  const [toCurrency, setToCurrency] = useState("EUR");
-  const [convertedAmount, setConvertedAmount] = useState<number>(0);
-  const [exchangeRates, setExchangeRates] = useState<{ [key: string]: number }>(
-    {}
-  );
-  const [currencies, setCurrencies] = useState<string[]>([]); // List of available currencies
-  const [fromSearch, setFromSearch] = useState(""); // Search input for 'From'
-  const [toSearch, setToSearch] = useState(""); // Search input for 'To'
-
   const API_KEY = "fab5466580eea5d483944dca";
   const API_URL = `https://v6.exchangerate-api.com/v6/${API_KEY}/latest/USD`;
 
-  useEffect(() => {
-    const fetchExchangeRates = async () => {
-      try {
-        const response = await axios.get(API_URL);
-        setExchangeRates(response.data.conversion_rates);
-        setCurrencies(Object.keys(response.data.conversion_rates));
-      } catch (error) {
-        console.error("Error fetching exchange rates:", error);
-      }
-    };
+  const [fromCurrency, setFromCurrency] = useState("");
+  const [toCurrency, setToCurrency] = useState("");
+  const [amount, setAmount] = useState("");
+  const [currencyList, setCurrencyList] = useState<string[]>([]);
+  const [filteredCurrencies, setFilteredCurrencies] = useState<string[]>([]);
+  const [conversionRate, setConversionRate] = useState<number | null>(null); // Store conversion rate
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
 
-    fetchExchangeRates();
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    axios.get(API_URL).then((response) => {
+      const currencies = Object.keys(response.data.conversion_rates);
+      setCurrencyList(currencies);
+      setFilteredCurrencies(currencies);
+    });
   }, []);
 
-  const handleConversion = () => {
-    if (amount && exchangeRates[toCurrency]) {
-      const rate = exchangeRates[toCurrency];
-      setConvertedAmount(Number((Number(amount) * rate).toFixed(2)));
+  useEffect(() => {
+    // Fetch conversion rate whenever fromCurrency or toCurrency changes
+    if (fromCurrency && toCurrency) {
+      const fetchConversionRate = async () => {
+        try {
+          const response = await axios.get(API_URL);
+          const rateFromUSD = response.data.conversion_rates[fromCurrency];
+          const rateToUSD = response.data.conversion_rates[toCurrency];
+          const rate = rateToUSD / rateFromUSD; // Conversion rate from one currency to another
+          setConversionRate(rate);
+        } catch (error) {
+          console.error("Error fetching conversion rate", error);
+        }
+      };
+
+      fetchConversionRate();
     }
+  }, [fromCurrency, toCurrency]); // Only run when fromCurrency or toCurrency changes
+
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const query = event.target.value;
+    setSearchQuery(query);
+
+    if (query) {
+      const filtered = currencyList.filter((currency) =>
+        currency.toLowerCase().includes(query.toLowerCase())
+      );
+      setFilteredCurrencies(filtered);
+    } else {
+      setFilteredCurrencies(currencyList);
+    }
+  };
+
+  const handleFromCurrencyChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setFromCurrency(event.target.value);
+  };
+
+  const handleToCurrencyChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setToCurrency(event.target.value);
+  };
+
+  const handleAmountChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setAmount(event.target.value);
+  };
+
+  const handleCurrencySelect = (currency: string, isFrom: boolean) => {
+    if (isFrom) {
+      setFromCurrency(currency);
+    } else {
+      setToCurrency(currency);
+    }
+    setShowDropdown(false);
+  };
+
+  const handleFocus = () => {
+    setShowDropdown(true);
+  };
+
+  const handleBlur = (event: React.FocusEvent<HTMLInputElement, Element>) => {
+    setTimeout(() => {
+      if (!dropdownRef.current?.contains(event.relatedTarget as Node)) {
+        setShowDropdown(false);
+      }
+    }, 100);
   };
 
   return (
     <Background>
       <div
+        id="value-container"
+        className="d-flex text-center align-items-center justify-content-center"
+        style={{ width: "100%" }}
+      >
+        <p className="text-dark" style={{ margin: 0 }}>
+          {fromCurrency} to {toCurrency}:{" "}
+          {conversionRate
+            ? (Number(amount) * conversionRate).toFixed(2)
+            : "Fetching..."}
+        </p>
+      </div>
+
+      <div
         id="currency-input"
-        className="d-flex justify-content-between align-items-center gap-3"
-        style={{ flexWrap: "wrap" }}
+        className="d-flex justify-content-center align-items-center gap-3 p-5"
+        style={{ width: "100%", height: "60%" }}
       >
         <div
           className="input-group align-items-start"
@@ -56,10 +127,7 @@ function UI() {
             className="form-control"
             placeholder="Amount"
             value={amount}
-            onChange={(event) => {
-              setAmount(event.target.value);
-              // console.log(event.target.value);
-            }}
+            onChange={handleAmountChange}
           />
         </div>
 
@@ -73,46 +141,37 @@ function UI() {
               type="text"
               className="form-control"
               placeholder="From"
-              value={fromSearch}
-              onChange={(event) => {
-                setFromSearch(event.target.value);
-              }}
-              onFocus={() => setFromSearch("")} //Reset when focused
+              value={fromCurrency}
+              onChange={handleFromCurrencyChange}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
             />
-            {fromSearch && (
+            {showDropdown && (
               <div
-                className="dropdown-menu show"
+                ref={dropdownRef}
+                className="dropdown-menu"
                 style={{
+                  display: "block",
                   maxHeight: "150px",
                   overflowY: "auto",
                   position: "absolute",
+                  zIndex: 1,
                 }}
               >
-                {currencies
-                  .filter((cur) =>
-                    cur.toLowerCase().includes(fromSearch.toLowerCase())
-                  )
-                  .map((cur) => (
-                    <button
-                      key={cur}
-                      className="dropdown-item"
-                      onClick={() => {
-                        setFromCurrency(cur);
-                        setFromSearch("");
-                      }}
-                    >
-                      {cur}
-                    </button>
-                  ))}
+                {filteredCurrencies.map((currency, index) => (
+                  <button
+                    key={index}
+                    className="dropdown-item"
+                    onClick={() => handleCurrencySelect(currency, true)}
+                  >
+                    {currency}
+                  </button>
+                ))}
               </div>
             )}
           </div>
 
-          <button
-            type="button"
-            className="btn btn-outline-primary"
-            onClick={handleConversion}
-          >
+          <button type="button" className="btn btn-outline-primary">
             <i className="bi bi-arrow-left-right" />
           </button>
 
@@ -121,48 +180,37 @@ function UI() {
               type="text"
               className="form-control"
               placeholder="To"
-              value={toSearch}
-              onChange={(event) => setToSearch(event.target.value)}
-              onFocus={() => setToSearch("")}
+              value={toCurrency}
+              onChange={handleToCurrencyChange}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
             />
-            {toSearch && (
+            {showDropdown && (
               <div
-                className="dropdown-menu show"
+                ref={dropdownRef}
+                className="dropdown-menu"
                 style={{
+                  display: "block",
                   maxHeight: "150px",
                   overflowY: "auto",
                   position: "absolute",
+                  zIndex: 1,
                 }}
               >
-                {currencies
-                  .filter((cur) =>
-                    cur.toLowerCase().includes(toSearch.toLowerCase())
-                  )
-                  .map((cur) => (
-                    <button
-                      key={cur}
-                      className="dropdown-item"
-                      onClick={() => {
-                        setToCurrency(cur);
-                        setToSearch("");
-                      }}
-                    >
-                      {cur}
-                    </button>
-                  ))}
+                {filteredCurrencies.map((currency, index) => (
+                  <button
+                    key={index}
+                    className="dropdown-item"
+                    onClick={() => handleCurrencySelect(currency, false)}
+                  >
+                    {currency}
+                  </button>
+                ))}
               </div>
             )}
           </div>
         </div>
       </div>
-
-      {convertedAmount !== null && (
-        <div>
-          <p className="text-dark">
-            {amount} {fromCurrency} = {convertedAmount} {toCurrency}
-          </p>
-        </div>
-      )}
     </Background>
   );
 }
